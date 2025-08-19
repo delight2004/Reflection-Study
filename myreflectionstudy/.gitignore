@@ -1,0 +1,15 @@
+# Ignore environment variables
+.env
+
+# Ignore Python virtual environment
+venv/
+
+# Ignore __pycache__ folders
+__pycache__/
+
+# Ignore other common Python artifacts
+*.pyc
+*.pyo
+*.pyd
+
+# ...add other patterns as needed...
