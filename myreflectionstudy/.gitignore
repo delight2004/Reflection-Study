@@ -1,15 +1,22 @@
 # Ignore environment variables
 .env
 
-# Ignore Python virtual environment
+# Ignore Python virtual environment folders and config
 venv/
+pyvenv.cfg
+Include/
+Lib/
+Scripts/
 
-# Ignore __pycache__ folders
+# Ignore __pycache__ folders and compiled files
 __pycache__/
-
-# Ignore other common Python artifacts
 *.pyc
 *.pyo
 *.pyd
+
+# Ignore distribution and package metadata
+*.dist-info/
+*.egg-info/
+*.egg
 
 # ...add other patterns as needed...
