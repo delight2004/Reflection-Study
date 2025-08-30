@@ -1,8 +1,9 @@
 import os
 from groq import Groq
 from dotenv import load_dotenv
+from pathlib import Path
 
-load_dotenv()
+load_dotenv(dotenv_path=Path("myreflectionstudy/.env"))
 
 class QuizAgent:
     def __init__(self, model="openai/gpt-oss-120b"): #self=specific instance of QuizAgent class
@@ -118,6 +119,45 @@ class QuizAgent:
 
         return response.choices[0].message.content
     
+    def evaluate_quiz_and_reflect(self, quiz:str, user_answers: dict) -> str:
+        """
+        Evaluates the user's answers and provides targeted feedback.
+        """
+        system_prompt = """
+        You are a supportive and encouraging tutor. A student has taken a quiz you generated. Their answers, the correct answers, and the original quiz are provided.
+        Your task is to:
+        1. Identify which questions the student answered incorrectly.
+        2. For each incorrect answer, explain why the correct answer is right
+           without simply stating it. Provide a brief, helpful re-explanation of the concept.
+        3. End with a positive and encouraging summary.
+        """
+
+        evaluation_prompt = f"""
+        Here is the quiz:
+        ---
+        {quiz}
+        ---
+
+        Here are the student's answers:
+        ---
+        {user_answers}
+        ---
+
+        Please provide feedback as instructed
+        """
+
+        evaluation_history = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": evaluation_prompt}
+        ]
+
+        response = self.client.chat.completions.create(
+            messages=evaluation_history,
+            model=self.model,
+        )
+
+        return response.choices[0].message.content
+    
     def run_study_session(self, notes: str, max_iterations=3) -> str:
         """
         Orchestrates the iterative generation and reflection process.
@@ -174,498 +214,243 @@ class QuizAgent:
                 print("--- Regenerated Quiz ---")
                 print(quiz)
         
-        print("\nMax iterations reached. Final quiz:")
+        print("\n---Final Quiz Ready For You!---")
+        print("Please answer the questions below.")
+        print(quiz)
+
+        #for now we'll use a placeholder
+        user_answers = {
+            "Question 1": "A",
+            "Question 2": "B",
+            "Question 3": "C"
+        }
+
+        # now we use the agent to reflect on the user's performance
+        feedback = self.evaluate_quiz_and_reflect(quiz, user_answers)
+        print("\n--- Your Personalized Feedback ---")
+        print(feedback)
+
         return quiz
+    
+
         
 
 agent = QuizAgent()
 text = """
 # Comprehensive RDBMS Study Notes
-
-
-
 ## 1. Components of RDBMS
-
-
-
 ### Core Components
-
 **Hardware**
-
 - Physical devices and infrastructure on which the database system runs
-
 - Includes servers, storage devices, and networking equipment
-
-
-
 **Software** 
-
 - Database management software that handles data storage, retrieval, and manipulation
-
 - Provides the interface between users and the physical data storage
-
-
-
 **Users**
-
 - End users who interact with the database system
-
 - Include database administrators, application developers, and business users
-
-
-
 **Database Access Language**
-
 - Primary communication interface between users and the DBMS
-
 - SQL (Structured Query Language) is the most common example
-
 - Enables users to query, insert, update, and delete data
-
-
-
 **Data**
-
 - The actual information stored and managed within the system
-
 - Organized in structured formats within tables and relationships
-
-
-
 **Procedures**
-
 - Instructions, rules, and protocols that govern database operations
-
 - Include backup procedures, security protocols, and maintenance routines
 
-
-
 ### System Flow and Interaction
-
 The interaction flow follows this pattern:
-
 1. Users interact with the Database Access Language, Data, and Procedures
-
 2. These interactions are processed through the Software layer
-
 3. The Software ultimately executes operations on the Hardware infrastructure
 
-
-
 ## 2. RDBMS Characteristics
-
-
-
 ### Key Design Principles
-
-
-
 **Easy Maintenance**
-
 - System architecture designed for straightforward maintenance and updates
-
 - Modular design allows for component-level maintenance without system-wide disruption
-
-
-
 **Data Correlation Capability**
-
 - Ability to establish relationships between different data sets
-
 - Supports evolving business requirements through flexible data connections
-
-
-
 **Minimum Redundancy**
-
 - Eliminates unnecessary data duplication across the system
-
 - Implements normalization principles to reduce storage waste and inconsistencies
-
-
-
 **Independent Central Repository**
-
 - All data managed from a single, centralized location
-
 - Provides unified data governance and control
-
-
-
 **Integrated Database Structure**
-
 - Data components work together seamlessly
-
 - Ensures consistency and coherence across all database operations
-
-
-
 **Automatic Recovery**
-
 - Built-in mechanisms for system recovery from failures
-
 - Includes backup systems, transaction logs, and rollback capabilities
 
-
-
 ## 3. Database Management Systems Overview
-
-
-
 ### RDBMS vs Traditional DBMS
-
-
-
 **Relational Database Management Systems (RDBMS)**
-
 - Store data in interconnected tables with clearly defined relationships
-
 - Use unique identifiers (like roll numbers) to link related information across multiple tables
-
 - Example: Student data linked across marks, attendance, and payment records through roll number
-
 - Require tabular data structure with well-defined storage formats
-
 - Support referential integrity and complex queries
 
-
-
 **Traditional DBMS**
-
 - Store data without required relationships between tables
-
 - Similar to a library system where various unrelated documents coexist
-
 - Accept any file structure including documents, images, and videos
-
 - Lack structured connections between data elements
-
 - Provide flexibility but limit structured data management capabilities
 
-
-
 ### Modern Hybrid Systems
-
 - Utilize ETL (Extraction, Transformation, and Loading) processes
-
 - Convert unstructured data from traditional systems into structured RDBMS format
-
 - Bridge the gap between flexible storage and structured analysis
-
 - Enable better data analysis and reporting capabilities
 
-
-
 ### Architecture Support
-
 - RDBMS supports client-server architecture for online transactions
-
 - Enables distributed services with data replication across multiple servers
-
 - Provides enhanced safety, availability, and performance through distributed architecture
 
-
-
 ## 4. Data Structure Types and Analysis
-
-
-
 ### Data Classification
-
-
-
 **Structured Data**
-
 - Exists in tabular format with clearly defined columns
-
 - Examples: Name, age, course information in database tables
-
 - Easily queryable and analyzable using SQL
-
 - Fits well into traditional relational database models
 
-
-
 **Unstructured Data**
-
 - Includes documents, images, PDFs, and multimedia files
-
 - Lacks predefined data models or organization
-
 - Requires specialized tools for analysis and processing
-
 - Common in content management and document storage systems
 
-
-
 **Semi-Structured Data**
-
 - Uses formats like JSON and XML
-
 - Provides more structure than unstructured data but less than fully structured data
-
 - Common in web and mobile applications for data transport
-
 - Offers descriptive markup superior to traditional flat file formats
 
-
-
 ### Data Transport Protocols
-
 - JSON and XML serve as primary data exchange formats between clients and servers
-
 - Essential for web and mobile application development
-
 - Provide standardized methods for data communication across different platforms
 
-
-
 ## 5. Database Architecture Tiers
-
-
-
 ### Single-Tier Architecture
-
 **One-Tier DBMS**
-
 - Involves direct local database access
-
 - No network services required
-
 - Simple but limited scalability
-
 - Suitable for standalone applications
 
-
-
 ### Multi-Tier Architecture
-
 **Enhanced Security and Accessibility**
-
 - Demonstrates improved database security through layered approach
-
 - Example: E-commerce payment systems using intermediary services like Pesapal
-
 - Applications connect through intermediary database services rather than direct cloud connections
-
 - Provides better security, scalability, and maintainability
 
-
-
 **Benefits of Multi-Tier Systems**
-
 - Separation of concerns between presentation, business logic, and data layers
-
 - Enhanced security through controlled access points
-
 - Improved scalability and performance optimization
-
 - Better maintenance and update capabilities
 
-
-
 ## 6. Database Modeling Approaches
-
-
-
 ### Fundamental Modeling Principles
-
 **Importance of Planning**
-
 - Database modeling requires creating logical templates before physical construction
-
 - Similar to architectural design where blueprints precede building construction
-
 - Essential for ensuring efficient and effective database structures
 
-
-
 **Logical vs Physical Design**
-
 - Logical design focuses on data relationships and business rules
-
 - Physical design addresses storage, indexing, and performance optimization
-
 - Both phases critical for successful database implementation
 
-
-
 ### Practical Modeling Example: Student Tracking System
-
-
-
 **Central Facts Table (Biodata)**
-
 - Contains core student personal information
-
 - Serves as the primary reference point for all related data
-
 - Uses unique identifiers (roll numbers) for relationship establishment
-
-
-
 **Subsidiary Tables**
-
 - **Attendance Table**: Tracks attendance across six course units
-
 - **Performance Table**: Records assignments, exams, and grades
-
 - **Subjects Table**: Maintains course and subject information
-
 - **Semesters Table**: Organizes academic term data
-
-
-
 **Relationship Maintenance**
-
 - All tables connected through roll number relationships
-
 - Ensures data integrity and consistency across the system
-
 - Enables comprehensive student information retrieval
 
-
-
 ## 7. Database Model Types
-
-
-
 ### Hierarchical Model
-
 **Structure and Organization**
-
 - Organizes data in tree-like structures with root and terminal nodes
-
 - Follows priority-based relationships similar to family hierarchies
-
 - Examples include organizational charts and file system structures
 
-
-
 **Characteristics**
-
 - Clear parent-child relationships
-
 - Efficient for representing naturally hierarchical data
-
 - Limited flexibility for complex relationships
 
-
-
 ### Network Model
-
 **Enhanced Flexibility**
-
 - Provides multiple relationship paths between data entities
-
 - Allows complex data retrieval from various database connection points
-
 - Supports many-to-many relationships more effectively than hierarchical models
 
-
-
 **Advantages**
-
 - More flexible than hierarchical models
-
 - Better representation of complex business relationships
-
 - Improved data access patterns
 
-
-
 ### Relational Model
-
 **Relationship Through Attributes**
-
 - Establishes relationships through shared table columns
-
 - Enables intuitive data retrieval by querying specific attributes
-
 - Example: Query student name to find corresponding contact information
 
-
-
 **Key Strengths**
-
 - Excellent data retrieval capabilities through attribute-based queries
-
 - Supports complex queries using SQL
-
 - Provides strong theoretical foundation through relational algebra
 
-
-
 ## 8. Entity-Relationship Modeling
-
-
-
 ### Visual Representation Standards
-
 **Entities (Objects)**
-
 - Represented in solid rectangles
-
 - Represent real-world objects or concepts in the database
-
-
-
 **Relationships (Actions)**
-
 - Depicted in rhombus (diamond) shapes
-
 - Show how entities interact with each other
-
-
-
 **Relationship Strength Indicators**
-
 - **Solid Rhombus**: Indicates strong, mandatory relationships
-
 - **Double-Walled Rhombus**: Shows weak or optional relationships
 
-
-
 ### Attribute Classifications
-
-
-
 **Key Attributes**
-
 - Uniquely identify individual entity instances
-
 - Essential for maintaining entity integrity and relationships
-
 - Cannot be null and must be unique across all instances
-
-
-
 **Composite Attributes**
-
 - Combine multiple key attributes into a single logical unit
-
 - Can be broken down into constituent parts
-
 - Example: Full address composed of street, city, state, zip code
 
-
-
 **Derived Attributes**
-
 - Calculate values based on other stored attributes
-
 - Not physically stored but computed when needed
-
 - Example: Age calculated from birth date and current date
 
-
-
 **Multi-Valued Attributes**
-
 - Accept multiple values for a single entity instance
-
 - Example: A person having multiple phone numbers or email addresses
-
 - Often implemented through separate related tables in physical design
 """
 #quiz = agent.generate_quiz(text)
